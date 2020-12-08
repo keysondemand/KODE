@@ -21,7 +21,10 @@ For any other number of nodes, try `python3 bbss.py -n <number of nodes>`
 
 Then navigate to scripts:
 Run `sh bbss_dkg_run.sh <number of nodes>`. This script runs only for MAC OSX. 
+
+
 Other DKGs using Shamir secret sharing, Replicated secret sharing can be run using 
 
 `sh shamir_dkg_run.sh <number of nodes>`
+
 `sh css_dkg_run.sh <number of nodes>`
