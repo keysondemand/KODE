@@ -18,4 +18,4 @@ It runs a black-box secret sharing for a default of 4 nodes.
 For any other number of nodes, try `python3 bbss.py -n <number of nodes>`
 
 Then navigate to scripts:
-Run ``sh bbss_dkg_run.sh <number of nodes>``
+Run `sh bbss_dkg_run.sh <number of nodes>`
