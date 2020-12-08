@@ -1,8 +1,8 @@
 # KODE 
 
-Protocol to generate secret keys on-the-fly
+**Protocol to generate secret keys on-the-fly using key-homomorphic PRFs and black-box secret sharing** 
 
-Requires:
+*Requirements:*
 
 Charm crypto library: https://github.com/JHUISI/charm
 
@@ -19,7 +19,18 @@ Navigate to secretsharing/blackbox/ and run `python3 bbss.py`.
 It runs a black-box secret sharing for a default of 4 nodes. 
 For any other number of nodes, try `python3 bbss.py -n <number of nodes>`
 
-Then navigate to scripts:
+*For Shamir secret sharing:*
+
+Navigate to secretsharing/shamir and run 'python3 shamirsharing.py'
+
+*For Combinatorial/Replicated secret sharing:*
+
+Navigate to secretsharing/combinatorial and run 'python3 css.py'
+
+
+*To check the distributed key generation code:*
+
+
 Run `sh bbss_dkg_run.sh <number of nodes>`. This script runs only for MAC OSX. 
 
 
