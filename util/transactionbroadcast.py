@@ -17,11 +17,9 @@ def broadcast(tobdx, key):
     payload = codecs.encode(str.encode(payload), "hex")
 
     if AWS:
-        #transaction_string = "http://localhost:26657/broadcast_tx_commit?tx=" + '"' + key + "=" + str(payload) + '"'
-        transaction_string = "http://kode-2.torusnode.com:26657/broadcast_tx_commit?tx=" + '"' + key + "=" + str(payload) + '"'
+        transaction_string = "http://localhost:26657/broadcast_tx_commit?tx=" + '"' + key + "=" + str(payload) + '"'
     else:
-        #transaction_string = "http://localhost:46657/broadcast_tx_commit?tx=" + '"' + key + "=" + str(payload) + '"'
-        transaction_string = "http://kode-2.torusnode.com:26657/broadcast_tx_commit?tx=" + '"' + key + "=" + str(payload) + '"'
+        transaction_string = "http://localhost:46657/broadcast_tx_commit?tx=" + '"' + key + "=" + str(payload) + '"'
 
     data_handling_end = time.process_time()
 
@@ -45,11 +43,9 @@ def broadcast(tobdx, key):
 def query(key):
     # url = "'http://localhost:46657/"
     if AWS:
-        #query_string = "http://localhost:26657/abci_query?data=" + '"' + key + '"'
-        query_string = "http://kode-2.torusnode.com:26657/abci_query?data=" + '"' + key + '"'
+        query_string = "http://localhost:26657/abci_query?data=" + '"' + key + '"'
     else:
-        #query_string = "http://localhost:46657/abci_query?data=" + '"' + key + '"'
-        query_string = "http://kode-2.torusnode.com:26657/abci_query?data=" + '"' + key + '"'
+        query_string = "http://localhost:46657/abci_query?data=" + '"' + key + '"'
 
     r = requests.post(query_string)
 
