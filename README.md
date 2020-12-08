@@ -39,3 +39,9 @@ Other DKGs using Shamir secret sharing, Replicated secret sharing can be run usi
 `sh shamir_dkg_run.sh <number of nodes>`
 
 `sh css_dkg_run.sh <number of nodes>`
+
+
+Note:
+The current code queries or posts transactions on the port `46657`, depending on the version of tendermint, the port may have to be changed in the file
+`util/transactionbroadcast.py`to either `26657` or other configured port
+
