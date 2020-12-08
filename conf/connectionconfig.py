@@ -11,7 +11,7 @@ CA_FILE = "certs/CA.cert"
 #N_NODES = 2
 BASE_PORT = 11000
 
-AWS = 1
+AWS = 0
 
 if AWS:
     MY_IP = ((requests.get('http://checkip.amazonaws.com')).text).strip()
