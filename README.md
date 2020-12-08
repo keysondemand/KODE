@@ -21,11 +21,11 @@ For any other number of nodes, try `python3 bbss.py -n <number of nodes>`
 
 *For Shamir secret sharing:*
 
-Navigate to secretsharing/shamir and run 'python3 shamirsharing.py'
-
+Navigate to secretsharing/shamir and run `python3 shamirsharing.py -n <number of nodes>. The default is 4 nodes.
+  
 *For Combinatorial/Replicated secret sharing:*
 
-Navigate to secretsharing/combinatorial and run 'python3 css.py'
+Navigate to secretsharing/combinatorial and run `python3 css.py -n <number of nodes>`. The default is 4 nodes. 
 
 
 *To check the distributed key generation code:*
