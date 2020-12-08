@@ -13,32 +13,20 @@ from conf.groupparam  import *
 from decimal import *
 
 #group is whatever DKG has been performed on 
-
 #p = group256.order()
 q = group.order()
-#q = group160.order()
 p = 3934245467 #32 bit prime 
-
-#q = group160.order()
 q1 = group256.order()
 
 
 
 getcontext().prec = 160
-
 pqratio = Decimal(int(p)) / Decimal(int(q))
 
 #u is total number of DKG instances/shares 
 #u = 512
 u = 256
 #u = 1024
-'''
-pbits = 256
-qbits = 512 
-float pqratio = p/q 
-pqbitdiff = qbits - pbits 
-pqration = 2 ** pqbitdiff 
-'''
 
 
 def deserializeElements(objects):
@@ -66,7 +54,6 @@ def partial_eval(nid, X, keytype):
     
     for i in range(len(keystrings)):
         ele = deserializeElements(keystrings[0])
-        #print(ele)
         share_rows.append(ele)
     #share size is number of elements 
     # we need u such share vectors 
@@ -86,13 +73,10 @@ def partial_eval(nid, X, keytype):
             evaluations.append(H * share_rows[i][j])
         dot_prod = sum(evaluations)
 
-        ###############################################
         val = int(dot_prod) * pqratio    #Rounding down 
-        ###############################################
 
         #Always output secp256k1 keys 
         par_sk = group256.init(ZR,int(val))
-
 
         #par_sk = group.init(ZR,int(val))
         par_eval.append(par_sk)

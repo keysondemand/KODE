@@ -22,8 +22,7 @@ def node_thread(nid):
     node_server_thread = threading.Thread(target=serverSock, args=(MY_IP, MY_PORT, nid))
     node_server_thread.start()
 
-    DPRINT("sleeping for 10 seconds")
-    sleep(30)
+    sleep(2)
 
     # start client part to send hello to all other peers
     node_client_thread = threading.Thread(target=sendId2peers, args=(nid,))
@@ -35,24 +34,14 @@ def node_thread(nid):
     # temp - delete lines later
     print("Finished handshake with all the nodes")
 
-    '''
-    node_server_thread.data_receive = False
-    temp = socket.socket(socket.AF_INET,
-                  socket.SOCK_STREAM).connect( (MY_IP, MY_PORT))
-    node_server_thread.join()
-
-    nf.M = genShamirDistMatrix(N_NODES)
-    '''
 
     print("\nPHASE1: Sending shares to nodes")
 
     t_start = time.time()
     # Read M from file
 
-    for i in range(100):
+    for i in range(1):
         sharing_start = time.process_time()
-        # M = np.loadtxt("./temp/m27.txt", dtype=int)    #TODO: Change this to dynamic file path
-        # M = np.loadtxt("M.txt", dtype=int)
         share_send_thread = threading.Thread(target=sendShareCommits2Peers, args=(nf.M, nid))
         share_send_thread.daemon = False
     
@@ -74,15 +63,9 @@ def node_thread(nid):
     
         gen_nizk_end = time.process_time()
     
-        # Wait till all shares, nizks  are received
-        # while not ((len(nizks) == N_NODES-1 ) and (len(my_rcvd_shares) == N_NODES -1)) :
-        #    sleep(0.5)
-        # 60 and 180 for 15 nodes
-    
         timeout_begin = time.process_time()
-    
         timeout_check_start = time.time()
-        max_limit = 60 * 3
+        max_limit = 60 * 1.5
         while time.time() - timeout_check_start < max_limit:
             if (len(nf.nizks) == nf.N_NODES - 1) and (len(nf.my_rcvd_shares) == nf.N_NODES - 1):
                 # print("All shares received, writing my share value to a file")
@@ -90,8 +73,6 @@ def node_thread(nid):
             time.sleep(1)
         # print("Received verified shares from: ", len(nf.my_rcvd_shares), " nodes")
         timeout_end = time.process_time()
-
-    sleep(30)
 
     # To close the server socket, just making a temp connectioon
     node_server_thread.data_receive = False
@@ -121,7 +102,7 @@ def node_thread(nid):
 
 if __name__ == "__main__":
     description = """ 
-    This program provides a single node running the DKG instance using Verifiable Shamir secret sharing
+    This program provides a single node running the DKG instance using verifiable shamir secret sharing
     """
 
     parser = argparse.ArgumentParser(description=description)

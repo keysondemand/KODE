@@ -22,9 +22,7 @@ def node_thread(nid):
     node_server_thread = threading.Thread(target=serverSock, args=(MY_IP, MY_PORT, nid))
     node_server_thread.start()
 
-    DPRINT("sleeping for 10 seconds")
-
-    sleep(30)
+    sleep(2)
 
     # start client part to send hello to all other peers
     node_client_thread = threading.Thread(target=sendId2peers, args=(nid,))
