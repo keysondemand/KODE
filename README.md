@@ -1,18 +1,17 @@
-# KODE 
+## KODE 
 
 **Protocol to generate secret keys on-the-fly using key-homomorphic PRFs and black-box secret sharing** 
 
-*Requirements:*
+**Requirements:**
 
 Charm crypto library: https://github.com/JHUISI/charm
 
 Tendermint: https://tendermint.com/ 
 
-To test the code locally:
+**To test the code locally:**
 
-Install Tendermint
-
-Run tendermint with kvstore app using `tendermint node --proxy_app=kvstore`
+1. Install Tendermint
+2. Run tendermint with kvstore app using `tendermint node --proxy_app=kvstore`
 
 First check secret sharing:
 Navigate to secretsharing/blackbox/ and run `python3 bbss.py`.
@@ -29,10 +28,7 @@ Navigate to secretsharing/combinatorial and run `python3 css.py -n <number of no
 
 
 *To check the distributed key generation code:*
-
-
 Run `sh bbss_dkg_run.sh <number of nodes>`. This script runs only for MAC OSX. 
-
 
 Other DKGs using Shamir secret sharing, Replicated secret sharing can be run using 
 
@@ -41,7 +37,7 @@ Other DKGs using Shamir secret sharing, Replicated secret sharing can be run usi
 `sh css_dkg_run.sh <number of nodes>`
 
 
-Note:
+**Note:**
 The current code queries or posts transactions on the port `46657`, depending on the version of tendermint, the port may have to be changed in the file
 `util/transactionbroadcast.py`to either `26657` or other configured port
 
