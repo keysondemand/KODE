@@ -21,7 +21,7 @@ For any other number of nodes, try `python3 bbss.py -n <number of nodes>`
 
 *For Shamir secret sharing:*
 
-Navigate to secretsharing/shamir and run `python3 shamirsharing.py -n <number of nodes>. The default is 4 nodes.
+Navigate to secretsharing/shamir and run `python3 shamirsharing.py -n <number of nodes>`. The default is 4 nodes.
   
 *For Combinatorial/Replicated secret sharing:*
 
