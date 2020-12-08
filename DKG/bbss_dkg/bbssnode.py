@@ -35,26 +35,14 @@ def node_thread(nid):
 
     # temp - delete lines later
     print("Finished handshake with all the nodes")
-
-    '''
-    sleep(5)
-    node_server_thread.data_receive = False
-    temp = socket.socket(socket.AF_INET,
-                  socket.SOCK_STREAM).connect( (MY_IP, MY_PORT))
-    node_server_thread.join()
-
-    '''
     print("\nPHASE1: Sending shares to nodes")
 
     t_start = time.time()
 
-
-    for i in range(5):
+    for i in range(1):
         sharing_start = time.process_time()
         # Read M from file
 
-        # M = np.loadtxt("./temp/m27.txt", dtype=int)    #TODO: Change this to dynamic file path
-        # M = np.loadtxt("M.txt", dtype=int)
         share_send_thread = threading.Thread(target=sendShareCommits2Peers, args=(nf.M, nid))
         share_send_thread.daemon = False
 
@@ -90,15 +78,13 @@ def node_thread(nid):
                 print("All shares received, writing my share value to a file")
                 break
             time.sleep(0.5)
-        print("Received verified shares from: ", len(nf.my_rcvd_shares), " nodes")
+        DPRINT("Received verified shares from: ", len(nf.my_rcvd_shares), " nodes")
 
-        # To close the server socket, just making a temp connectioon
         
-        sleep(20)
 
     t_end = time.time()
 
-    sleep(30)
+    # To close the server socket, just making a temp connectioon
     node_server_thread.data_receive = False
     temp = socket.socket(socket.AF_INET,
                          socket.SOCK_STREAM).connect((MY_IP, MY_PORT))
@@ -106,7 +92,6 @@ def node_thread(nid):
     timeout_end = time.process_time()
 
 
-    '''
     #Write share to file 
     if nid != 0:
         my_secret_share = [0]*len(my_rcvd_shares[0])
@@ -133,7 +118,6 @@ def node_thread(nid):
 
     json.dump(str(my_share_dash_strings), open(share_dash_filename,'w'))
     json.dump(str(my_share_dash_strings), open(share_dash_pss_filename,'w'))
-    '''
 
     sharing_time          = (sharing_end          - sharing_start)          * 1000
     gen_nizk_time         = (gen_nizk_end         - gen_nizk_start)         * 1000
@@ -155,7 +139,7 @@ def node_thread(nid):
 
 if __name__ == "__main__":
     description = """ 
-    This program provides a single node running the DKG instance using Verifiable Shamir secret sharing
+    This program provides a single node running the DKG instance using verifiable black-box secret sharing
     """
 
     parser = argparse.ArgumentParser(description=description)
