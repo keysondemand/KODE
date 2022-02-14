@@ -15,32 +15,14 @@ from decimal import *
 from DPRF.zkp_equality_base import nizkEqualityOfBase
 
 #group is whatever DKG has been performed on 
-
-#p = group256.order()
+p = group256.order()
 q = group.order()
-#q = group160.order()
-p = 3934245467 #32 bit prime 
 
-#q = group160.order()
-q1 = group256.order()
-
-
-
-getcontext().prec = 160
-
+getcontext().prec =  512
 pqratio = Decimal(int(p)) / Decimal(int(q))
 
 #u is total number of DKG instances/shares 
-#u = 512
-u = 256
-#u = 1024
-'''
-pbits = 256
-qbits = 512 
-float pqratio = p/q 
-pqbitdiff = qbits - pbits 
-pqration = 2 ** pqbitdiff 
-'''
+u = 8192 
 
 
 def deserializeElements(objects):
@@ -73,7 +55,6 @@ def partial_eval(nid, X, keytype):
     #share size is number of elements 
     # we need u such share vectors 
 
-
     key_eval_start = time.process_time()
 
     print("len(share_rows[0])", len(share_rows[0]))
@@ -81,20 +62,14 @@ def partial_eval(nid, X, keytype):
     for j in range(len(share_rows[0])):
         evaluations = []
         for i in range(u):
-    #for i in range(len(elements)):
-            X = X+str(i)
-            H = group.hash(X, target_type=ZR)
-            #evaluations.append(H * elements[i])
+            hash_input  = X+str(i)
+            H = group.hash(hash_input, target_type=ZR)
             evaluations.append(H * share_rows[i][j])
         dot_prod = sum(evaluations)
-
-        ###############################################
         val = int(dot_prod) * pqratio    #Rounding down 
-        ###############################################
 
         #Always output secp256k1 keys 
         par_sk = group256.init(ZR,int(val))
-
 
         #par_sk = group.init(ZR,int(val))
         par_eval.append(par_sk)
