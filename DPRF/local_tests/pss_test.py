@@ -10,12 +10,67 @@ from secretsharing.blackbox.bbssutil.distmatrix.dist_matrix_gen import *
 from secretsharing.blackbox.bbssutil.distmatrix.maj_index_list  import * 
 
 from mip_solve_lambda  import *
+from decimal import * 
 
 def DPRINT ( *args , **kwargs ) : 
     if debug:
         print ( *args , **kwargs )
 
 debug = 0
+
+p = group256.order()
+print("p value:", p)
+q = group283.order()
+
+getcontext().prec = 512
+pqratio = Decimal(int(p)) / Decimal(int(q))
+
+u = 1024
+
+def partial_eval(X, keytype, mykeyshare):
+    global p, q, u
+    par_eval = []
+    #for j in range(len(mykeyshares)):
+    #evaluations = []
+    #for i in range(u):
+    #i = 0
+    #X = X+str(i)
+    #H = group283.hash(X, target_type=ZR)
+    keyvec = u * [mykeyshare]
+    hash_vec = []
+    for i in range(u):
+        hash_input = X+str(i)
+        H = group283.hash(hash_input, target_type=ZR)
+        hash_vec.append(H)
+    dot_prod =  np.dot(hash_vec , keyvec)
+    #dot_prod =  H * mykeyshare
+    #dot_prod = sum(evaluations)
+    val = int(int(dot_prod) * pqratio)    #Rounding down
+    #print("bit length partial eval:", val.bit_length())
+    par_sk = group256.init(ZR,val)
+    return par_sk 
+
+
+def partial_eval2(X, keytype, mykeyshares):
+    global p, q, u
+    #par_eval = []
+    
+    evaluations = []
+    for j in range(len(mykeyshares)):
+        #X = "easwar"
+        hash_vec = []
+        keyvec = u * [mykeyshares[j]]
+        hash_vec = [group283.hash(X+str(i), target_type=ZR) for i in range(u)]
+        dot_prod =  np.dot(hash_vec , keyvec)
+        #dot_prod =  np.dot(hash_vec , mykeyshares[j])
+        #dot_prod = sum(evaluations)
+        val = int(int(dot_prod) * pqratio)    #Rounding down
+        #print("bit length partial eval:", val.bit_length())
+        par_sk = group256.init(ZR,val)
+        evaluations.append(par_sk)
+    return evaluations 
+
+
 
 def searchNMmap(n,m):
     #  Searches for a good random instance of input literals (n) to leaves (m) map: N_M_map
@@ -166,6 +221,9 @@ def bbssShareGen4PSS(M, share):
 
     rhos   = randVecZR(e-1) 
     RHO = secret + rhos 
+    #if group == group283 or group == group571:
+    #    neworder = int(group.order()) // 4 # Cofactor of 4, ZR actual order is /4
+    #    RHO = [x % neworder for x in RHO]
     RHO = np.array(RHO)
     S = genShareMatrix(M, RHO)
     return S, RHO
@@ -232,6 +290,7 @@ if __name__ == "__main__":
     M = np.loadtxt(M_filename, dtype=int)
     print("Shape of M:", np.shape(M))
     
+    '''
     row_node_indices = psiFunction(rand_ind, m)
     
     S = bbssShareGen(M)
@@ -258,7 +317,7 @@ if __name__ == "__main__":
     with open(clockfilename, "a") as tf:
         writer = csv.writer(tf)
         writer.writerow([total_clock_time])
-
+    '''
     '''
     Node_index= {k:[] for k in range(n)}
     #TODO: Do not search for N_M-map, use from the stored datasets 
@@ -289,25 +348,123 @@ if __name__ == "__main__":
         print("node_share_index:", node_share_index)
     '''
 
+    '''
     M_row_index = []
     shares_vec = []
+    partial_evaluations = []
+    X = "easwar"
+    keytype = "sec"
     #for nid in range(3*n//4):
     for nid in range(n):
         #row_indices = row_indices + node_share_index[i]
         M_row_index = M_row_index + node_share_index[nid]
         shares_vec += assigned_shares[nid]
+        mykeyshares = assigned_shares[nid]
+        partial_evaluations +=  partial_eval2(X, keytype, mykeyshares)
     #print("Row indices for reconstruction", row_indices)
     ma_t = np.transpose(M[M_row_index])
     e  = np.zeros((len(ma_t),), dtype=int)
     e[0] = 1
     lambda_a = np.array(solve_for_lambda(ma_t, e), dtype=int)
-    if bits == 256:
-        lambda_zr = [group256.init(ZR,int(x)) for x in lambda_a]
-    elif bits == 283:
-        lambda_zr = [group283.init(ZR,int(x)) for x in lambda_a]
+    secretkey = np.dot(shares_vec, lambda_a)
+    print("shared key:", secretkey)
+    print("actual secret key:",  partial_eval(X, keytype, secretkey))
 
-    secretkey = np.dot(shares_vec, lambda_zr)
-    #secretkey = np.dot(shares_vec, lambda_zr)
-    print("secret key:", secretkey)
+    par_eval = []
+    for i in range(len(shares_vec)):
+        par_eval.append(partial_eval(X, keytype, shares_vec[i]))
+    user_eval_sk = np.dot(par_eval, lambda_a)
+    print("user evaluated key:", user_eval_sk)
+    user_eval_sk2 = np.dot(partial_evaluations, lambda_a)
+    print("user evaluated key2:", user_eval_sk2)
+    #print("par_eval", par_eval)
+    #print("partial_evaluations", partial_evaluations)
+    if partial_evaluations == par_eval:
+        print("yes they are")
+    '''
 
+    #------------------------------------# 
+
+    print("Starting afresh") 
+
+    # Same size committee 
+    
+    row_node_indices = psiFunction(rand_ind, m)
+    S = bbssShareGen(M)
+    assigned_shares, node_share_index = assignShares2Nodes(S,row_node_indices, n)
+    ma_t = np.transpose(M)
+    e  = np.zeros((len(ma_t),), dtype=int)
+    e[0] = 1
+    lambda_a = np.array(solve_for_lambda(ma_t, e), dtype=int)
+    lambda1 = lambda_a 
+    secretkey = np.dot(S, lambda_a)
+    print("Reconstructed:", secretkey)
+
+    #-- PSS --#
+
+    pss_shares = []
+    for share in S:
+        newshares,RHO = bbssShareGen4PSS(M,share)
+        pss_shares.append(newshares)
+    pss_dash  =  np.transpose(pss_shares)
+    dot_prod = np.dot(pss_dash, lambda_a)
+    #arr = np.array(pss_shares)
+    #print("arr:", arr)
+    #transpose = np.array([[arr[y][x] for y in range(len(arr))] for x in range(len(arr[0]))])
+    #dot_prod = np.dot(transpose, lambda_a)
+    newsecretkey = np.dot(dot_prod, lambda_a)
+    print("after PSS:", newsecretkey)
+
+    #--------------------------------------------------#
+
+    
+    n = 3
+
+    #TODO: make file name include threshold t  
+    filename = "bbssutil/datasets/n"+str(n)
+
+    ssdata = None 
+    try:
+        f = open(filename)
+        ssdata = f.readlines()
+        ssdata = json.loads(ssdata[0])
+        DPRINT(ssdata)
+    except Exception as e: print("",e, "\nSo moving on")
+
+    if ssdata:
+        n        = int(ssdata['n'])
+        m        = int(ssdata['m'])
+        rand_ind = ssdata['rand_ind']
+        rand_ind = ssdata['rand_ind']
+        N_M_map  = ssdata['map']
+        lambdas  = ssdata['lambdas']
+
+    else:
+        rand_ind, m, N_M_map = generateLiterals(n)
+    M_filename = "./bbssutil/matrices/"+"m"+str(m)+".txt"
+    M_dash  = np.loadtxt(M_filename, dtype=int)
+
+    ma_t = np.transpose(M_dash)
+    e  = np.zeros((len(ma_t),), dtype=int)
+    e[0] = 1
+    lambda_a = np.array(solve_for_lambda(ma_t, e), dtype=int)
+    print("lambda_a.shape:", lambda_a.shape)
+
+
+    pss_shares = []
+    for share in S:
+        newshares,RHO = bbssShareGen4PSS(M_dash,share)
+        pss_shares.append(newshares)
+    print("newshares.shape", newshares.shape)
+    print("pss_shares.shape", np.array(pss_shares).shape)
+    pss_dash  =  np.transpose(pss_shares)
+    print("pss_dash.shape:", pss_dash.shape)
+    dot_prod = np.dot(pss_dash, lambda1)
+    print("dot_prod.size", dot_prod.shape)
+    #arr = np.array(pss_shares)
+    #print("arr:", arr)
+    #transpose = np.array([[arr[y][x] for y in range(len(arr))] for x in range(len(arr[0]))])
+    #dot_prod = np.dot(transpose, lambda_a)
+    newsecretkey = np.dot(dot_prod, lambda_a)
+    print("after PSS2:", newsecretkey)
 
