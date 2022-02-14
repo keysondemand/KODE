@@ -223,7 +223,6 @@ if __name__ == "__main__":
 
     else:
         rand_ind, m, N_M_map = generateLiterals(n)
-    #rand_ind, m, N_M_map = generateLiterals(n)
 
     print("m:", m)
     sharing_start = time.process_time()
@@ -240,13 +239,10 @@ if __name__ == "__main__":
     sharing_end = time.process_time()
 
     sharing_time = (sharing_end - sharing_start)*1000
-    #print("sharing_time:", sharing_time)
 
     t_end = time.time()
     total_clock_time = t_end - t_start 
-    #print("total_clock_time:", total_clock_time)
 
-    #print("Assigned shares':", assigned_shares)
     DPRINT("Assigned shares':", assigned_shares)
     DPRINT("Node share index:", node_share_index)
 
@@ -293,10 +289,8 @@ if __name__ == "__main__":
     shares_vec = []
     #for nid in range(3*n//4):
     for nid in range(n):
-        #row_indices = row_indices + node_share_index[i]
         M_row_index = M_row_index + node_share_index[nid]
         shares_vec += assigned_shares[nid]
-    #print("Row indices for reconstruction", row_indices)
     ma_t = np.transpose(M[M_row_index])
     e  = np.zeros((len(ma_t),), dtype=int)
     e[0] = 1
@@ -307,7 +301,6 @@ if __name__ == "__main__":
         lambda_zr = [group283.init(ZR,int(x)) for x in lambda_a]
 
     secretkey = np.dot(shares_vec, lambda_zr)
-    #secretkey = np.dot(shares_vec, lambda_zr)
     print("secret key:", secretkey)
 
 
