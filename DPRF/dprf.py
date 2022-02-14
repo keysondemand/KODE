@@ -15,10 +15,6 @@ from decimal import *
 #group is whatever DKG has been performed on 
 p = group256.order()
 q = group283.order()
-#p = 3934245467 #32 bit prime 
-#q1 = group256.order()
-
-
 
 getcontext().prec = 512
 pqratio = Decimal(int(p)) / Decimal(int(q))

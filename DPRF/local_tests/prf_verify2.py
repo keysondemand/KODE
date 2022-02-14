@@ -23,7 +23,7 @@ debug = 0
 p = group256.order()
 q = group283.order()
 
-getcontext().prec = 1024
+getcontext().prec = 512
 pqratio = Decimal(int(p)) / Decimal(int(q))
 
 #u = 1024
@@ -80,8 +80,7 @@ if __name__ == "__main__":
 
     #------------------ PRF VERIFY -------------- # 
 
-    u  = 10
-    #u  = 8192
+    u  = 8192
     X = "easwar"
     tau = group571.order()
 
@@ -130,7 +129,6 @@ if __name__ == "__main__":
     gqztau = g571**qztau 
     left = gw_hat ** int(p) 
     right = gqztau * g_rtau 
-
 
     print("right:", right)
     print("left:", left)

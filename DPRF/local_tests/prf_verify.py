@@ -34,17 +34,13 @@ def partial_eval(X, keytype, mykeyshare):
     keyvec = u * [mykeyshare]
     hash_vec = [group283.hash(X+str(i), target_type=ZR) for i in range(u)]
     dot_prod =  np.dot(hash_vec , keyvec)
-    #dot_prod =  H * mykeyshare
-    #dot_prod = sum(evaluations)
     val = int(int(dot_prod) * pqratio)    #Rounding down
-    #print("bit length partial eval:", val.bit_length())
     par_sk = group256.init(ZR,val)
     return par_sk 
 
 
 def partial_eval2(X, keytype, mykeyshares):
     global p, q, u
-    #par_eval = []
     
     evaluations = []
     for j in range(len(mykeyshares)):
@@ -53,10 +49,7 @@ def partial_eval2(X, keytype, mykeyshares):
         keyvec = u * [mykeyshares[j]]
         hash_vec = [group283.hash(X+str(i), target_type=ZR) for i in range(u)]
         dot_prod =  np.dot(hash_vec , keyvec)
-        #dot_prod =  np.dot(hash_vec , mykeyshares[j])
-        #dot_prod = sum(evaluations)
         val = int(int(dot_prod) * pqratio)    #Rounding down
-        #print("bit length partial eval:", val.bit_length())
         par_sk = group256.init(ZR,val)
         evaluations.append(par_sk)
     return evaluations 
@@ -79,9 +72,7 @@ if __name__ == "__main__":
     t_start = time.time()
 
     #------------------ PRF VERIFY -------------- # 
-
-    u  = 108
-    #u  = 8192
+    u  = 8192
     X = "easwar"
     tau = group571.order()
 

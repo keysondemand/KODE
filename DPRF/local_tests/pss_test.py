@@ -19,13 +19,12 @@ def DPRINT ( *args , **kwargs ) :
 debug = 0
 
 p = group256.order()
-print("p value:", p)
 q = group283.order()
 
 getcontext().prec = 512
 pqratio = Decimal(int(p)) / Decimal(int(q))
 
-u = 1024
+u = 8192
 
 def partial_eval(X, keytype, mykeyshare):
     global p, q, u
@@ -290,98 +289,6 @@ if __name__ == "__main__":
     M = np.loadtxt(M_filename, dtype=int)
     print("Shape of M:", np.shape(M))
     
-    '''
-    row_node_indices = psiFunction(rand_ind, m)
-    
-    S = bbssShareGen(M)
-    assigned_shares, node_share_index = assignShares2Nodes(S,row_node_indices, n)
-
-    sharing_end = time.process_time()
-
-    sharing_time = (sharing_end - sharing_start)*1000
-    #print("sharing_time:", sharing_time)
-
-    t_end = time.time()
-    total_clock_time = t_end - t_start 
-    #print("total_clock_time:", total_clock_time)
-
-    #print("Assigned shares':", assigned_shares)
-    DPRINT("Assigned shares':", assigned_shares)
-    DPRINT("Node share index:", node_share_index)
-
-    filename = "tmp/timing_n_"+str(n)+"without_filereading"
-    with open (filename,'a') as f:
-        f.write(str(sharing_time)+"\n")
-
-    clockfilename = "tmp/total_timing_n_"+str(n)+"without_filereading.csv"
-    with open(clockfilename, "a") as tf:
-        writer = csv.writer(tf)
-        writer.writerow([total_clock_time])
-    '''
-    '''
-    Node_index= {k:[] for k in range(n)}
-    #TODO: Do not search for N_M-map, use from the stored datasets 
-
-    rand_ind, m, N_M_map = generateLiterals(n)
-    print("rand_ind:", rand_ind, "\nm:", m , "\nN_M_map", N_M_map)
-
-    M_filename = "./util/matrices/"+"m"+str(m)+".txt"
-    M = np.loadtxt(M_filename, dtype=int)
-    if debug:
-        print("Matrix M loaded from file:\n", M)
-        print("Dimensions of loaded Matrix M:", M.shape)
-
-    row_node_indices = psiFunction(rand_ind, m)
-    print("row_node_indices:", row_node_indices)
-
-    #S = LISS_share_gen(M)
-
-    S = bbssShareGen(M)
-    print ("S",S)
-
-
-    S_dash, R_dash = bbssShareGen4DKG(M)
-
-    assigned_shares, node_share_index = assignShares2Nodes(S,row_node_indices, n)
-    if debug:
-        print("Assigned shares:", assigned_shares)
-        print("node_share_index:", node_share_index)
-    '''
-
-    '''
-    M_row_index = []
-    shares_vec = []
-    partial_evaluations = []
-    X = "easwar"
-    keytype = "sec"
-    #for nid in range(3*n//4):
-    for nid in range(n):
-        #row_indices = row_indices + node_share_index[i]
-        M_row_index = M_row_index + node_share_index[nid]
-        shares_vec += assigned_shares[nid]
-        mykeyshares = assigned_shares[nid]
-        partial_evaluations +=  partial_eval2(X, keytype, mykeyshares)
-    #print("Row indices for reconstruction", row_indices)
-    ma_t = np.transpose(M[M_row_index])
-    e  = np.zeros((len(ma_t),), dtype=int)
-    e[0] = 1
-    lambda_a = np.array(solve_for_lambda(ma_t, e), dtype=int)
-    secretkey = np.dot(shares_vec, lambda_a)
-    print("shared key:", secretkey)
-    print("actual secret key:",  partial_eval(X, keytype, secretkey))
-
-    par_eval = []
-    for i in range(len(shares_vec)):
-        par_eval.append(partial_eval(X, keytype, shares_vec[i]))
-    user_eval_sk = np.dot(par_eval, lambda_a)
-    print("user evaluated key:", user_eval_sk)
-    user_eval_sk2 = np.dot(partial_evaluations, lambda_a)
-    print("user evaluated key2:", user_eval_sk2)
-    #print("par_eval", par_eval)
-    #print("partial_evaluations", partial_evaluations)
-    if partial_evaluations == par_eval:
-        print("yes they are")
-    '''
 
     #------------------------------------# 
 
@@ -408,16 +315,10 @@ if __name__ == "__main__":
         pss_shares.append(newshares)
     pss_dash  =  np.transpose(pss_shares)
     dot_prod = np.dot(pss_dash, lambda_a)
-    #arr = np.array(pss_shares)
-    #print("arr:", arr)
-    #transpose = np.array([[arr[y][x] for y in range(len(arr))] for x in range(len(arr[0]))])
-    #dot_prod = np.dot(transpose, lambda_a)
     newsecretkey = np.dot(dot_prod, lambda_a)
     print("after PSS:", newsecretkey)
 
     #--------------------------------------------------#
-
-    
     n = 3
 
     #TODO: make file name include threshold t  
@@ -448,23 +349,13 @@ if __name__ == "__main__":
     e  = np.zeros((len(ma_t),), dtype=int)
     e[0] = 1
     lambda_a = np.array(solve_for_lambda(ma_t, e), dtype=int)
-    print("lambda_a.shape:", lambda_a.shape)
-
 
     pss_shares = []
     for share in S:
         newshares,RHO = bbssShareGen4PSS(M_dash,share)
         pss_shares.append(newshares)
-    print("newshares.shape", newshares.shape)
-    print("pss_shares.shape", np.array(pss_shares).shape)
     pss_dash  =  np.transpose(pss_shares)
-    print("pss_dash.shape:", pss_dash.shape)
     dot_prod = np.dot(pss_dash, lambda1)
-    print("dot_prod.size", dot_prod.shape)
-    #arr = np.array(pss_shares)
-    #print("arr:", arr)
-    #transpose = np.array([[arr[y][x] for y in range(len(arr))] for x in range(len(arr[0]))])
-    #dot_prod = np.dot(transpose, lambda_a)
     newsecretkey = np.dot(dot_prod, lambda_a)
     print("after PSS2:", newsecretkey)
 
