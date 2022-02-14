@@ -13,20 +13,18 @@ from conf.groupparam  import *
 from decimal import *
 
 #group is whatever DKG has been performed on 
-#p = group256.order()
-q = group.order()
-p = 3934245467 #32 bit prime 
-q1 = group256.order()
+p = group256.order()
+q = group283.order()
+#p = 3934245467 #32 bit prime 
+#q1 = group256.order()
 
 
 
-getcontext().prec = 160
+getcontext().prec = 512
 pqratio = Decimal(int(p)) / Decimal(int(q))
 
 #u is total number of DKG instances/shares 
-#u = 512
-u = 256
-#u = 1024
+u = 8192
 
 
 def deserializeElements(objects):
@@ -37,10 +35,8 @@ def deserializeElements(objects):
 
 def partial_eval(nid, X, keytype):
     global p, q, u
-    #keyfilename = "./tmp/node" + str(nid) + "share.txt"
     keyfilename = "./tmp/node" + str(nid) + "sharelist.txt"
-    #keyfilename = "./tmp/node" + str(nid) + "share.txt"
-    
+
     file_read_start = time.process_time()
 
     keystrings = []
@@ -66,13 +62,10 @@ def partial_eval(nid, X, keytype):
     for j in range(len(share_rows[0])):
         evaluations = []
         for i in range(u):
-    #for i in range(len(elements)):
-            X = X+str(i)
-            H = group.hash(X, target_type=ZR)
-            #evaluations.append(H * elements[i])
+            hash_input  = X+str(i)
+            H = group.hash(hash_input, target_type=ZR)
             evaluations.append(H * share_rows[i][j])
         dot_prod = sum(evaluations)
-
         val = int(dot_prod) * pqratio    #Rounding down 
 
         #Always output secp256k1 keys 
