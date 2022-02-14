@@ -83,6 +83,14 @@ print("g**0:", g**zero)
 print("(g**0)*g:", (g**zero)*g)
    
 for i in range(20):
+    #g1 = group283.random(G)
+
+    #g = g1 ** (group283.init(ZR, int(4)))
+    #    print("g:", g)
+    #b = group571.init(ZR, int(4))
+    #g = group283.random(G)
+    #c = (int(a)+ int(b)) % (group571.order())
+    #c = group571.init(ZR, int(c))
 
     a1 = group283.random(ZR)
     b1 = group283.random(ZR)

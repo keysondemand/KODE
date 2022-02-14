@@ -9,6 +9,7 @@ from secretsharing.blackbox.bbssutil.checkiter                  import *
 from secretsharing.blackbox.bbssutil.distmatrix.dist_matrix_gen import *
 from secretsharing.blackbox.bbssutil.distmatrix.maj_index_list  import * 
 
+from mip_solve_lambda  import *
 
 def DPRINT ( *args , **kwargs ) : 
     if debug:
@@ -97,7 +98,6 @@ def psiFunction(randomized_input_indices, m):
         dist_matrix_row_node_indices.append(randomized_input_indices[dist_matrix_row_indices[i]])
 
     json.dump(dist_matrix_row_node_indices, open("tmp/row_node_indices.txt",'w')) 
-
     return dist_matrix_row_node_indices
 
 
@@ -125,7 +125,10 @@ def bbssShareGen(M):
     
     RHO = np.array(RHO)
     DPRINT("no. of cols of M: ", len(M[0]), "\nRHO:", RHO)
+    print("Value being shared - RHO[0]:", RHO[0])
+    print("bitlength of secret:", int(RHO[0]).bit_length())
     S = genShareMatrix(M, RHO)
+
     return S
 
 def bbssShareGen4DKG(M):
@@ -133,7 +136,7 @@ def bbssShareGen4DKG(M):
     d = len(M)
     e = len(M[0])
     
-    secret = randVecZR(1)
+    secret = randVecZR(1) 
     rhos   = randVecZR(e-1) 
     RHO = secret + rhos 
 
@@ -143,6 +146,8 @@ def bbssShareGen4DKG(M):
 
     RHO = np.array(RHO)
     S = genShareMatrix(M, RHO)
+    print("Value being shared - RHO[0]:", RHO[0])
+    print("bitlength of secret:", int(RHO[0]).bit_length())
     return S, RHO
 
 
@@ -235,12 +240,13 @@ if __name__ == "__main__":
     sharing_end = time.process_time()
 
     sharing_time = (sharing_end - sharing_start)*1000
-    print("sharing_time:", sharing_time)
+    #print("sharing_time:", sharing_time)
 
     t_end = time.time()
     total_clock_time = t_end - t_start 
-    print("total_clock_time:", total_clock_time)
+    #print("total_clock_time:", total_clock_time)
 
+    #print("Assigned shares':", assigned_shares)
     DPRINT("Assigned shares':", assigned_shares)
     DPRINT("Node share index:", node_share_index)
 
@@ -283,16 +289,25 @@ if __name__ == "__main__":
         print("node_share_index:", node_share_index)
     '''
 
-    ''' 
-    row_indices = []
-    #for i in range(3*n//4):
-    for i in range(n):
-        row_indices = row_indices + node_share_index[i]
-    print("Row indices for reconstruction", row_indices)
-    '''
-    '''
-    mt = np.transpose(M[row_indices])
-    e  = np.zeros((len(mt),), dtype=int)
+    M_row_index = []
+    shares_vec = []
+    #for nid in range(3*n//4):
+    for nid in range(n):
+        #row_indices = row_indices + node_share_index[i]
+        M_row_index = M_row_index + node_share_index[nid]
+        shares_vec += assigned_shares[nid]
+    #print("Row indices for reconstruction", row_indices)
+    ma_t = np.transpose(M[M_row_index])
+    e  = np.zeros((len(ma_t),), dtype=int)
     e[0] = 1
+    lambda_a = np.array(solve_for_lambda(ma_t, e), dtype=int)
+    if bits == 256:
+        lambda_zr = [group256.init(ZR,int(x)) for x in lambda_a]
+    elif bits == 283:
+        lambda_zr = [group283.init(ZR,int(x)) for x in lambda_a]
 
-   ''' 
+    secretkey = np.dot(shares_vec, lambda_zr)
+    #secretkey = np.dot(shares_vec, lambda_zr)
+    print("secret key:", secretkey)
+
+
