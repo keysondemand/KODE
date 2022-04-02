@@ -1,4 +1,4 @@
-import secrets, math, json, sys, argparse, ast, time  
+import secrets, math, json, sys, argparse, ast, time  , csv
 import numpy as np
 
 sys.path += ['./', '../', '../../']
@@ -9,12 +9,67 @@ from secretsharing.blackbox.bbssutil.checkiter                  import *
 from secretsharing.blackbox.bbssutil.distmatrix.dist_matrix_gen import *
 from secretsharing.blackbox.bbssutil.distmatrix.maj_index_list  import * 
 
+from mip_solve_lambda  import *
+from decimal import * 
 
 def DPRINT ( *args , **kwargs ) : 
     if debug:
         print ( *args , **kwargs )
 
 debug = 0
+
+p = group256.order()
+q = group283.order()
+
+getcontext().prec = 512
+pqratio = Decimal(int(p)) / Decimal(int(q))
+
+u = 8192
+
+def partial_eval(X, keytype, mykeyshare):
+    global p, q, u
+    par_eval = []
+    #for j in range(len(mykeyshares)):
+    #evaluations = []
+    #for i in range(u):
+    #i = 0
+    #X = X+str(i)
+    #H = group283.hash(X, target_type=ZR)
+    keyvec = u * [mykeyshare]
+    hash_vec = []
+    for i in range(u):
+        hash_input = X+str(i)
+        H = group283.hash(hash_input, target_type=ZR)
+        hash_vec.append(H)
+    dot_prod =  np.dot(hash_vec , keyvec)
+    #dot_prod =  H * mykeyshare
+    #dot_prod = sum(evaluations)
+    val = int(int(dot_prod) * pqratio)    #Rounding down
+    #print("bit length partial eval:", val.bit_length())
+    par_sk = group256.init(ZR,val)
+    return par_sk 
+
+
+def partial_eval2(X, keytype, mykeyshares):
+    global p, q, u
+    #par_eval = []
+    
+    evaluations = []
+    for j in range(len(mykeyshares)):
+        #X = "easwar"
+        hash_vec = []
+        keyvec = u * [mykeyshares[j]]
+        hash_vec = [group283.hash(X+str(i), target_type=ZR) for i in range(u)]
+        dot_prod =  np.dot(hash_vec , keyvec)
+        #dot_prod =  np.dot(hash_vec , mykeyshares[j])
+        #dot_prod = sum(evaluations)
+        val = int(int(dot_prod) * pqratio)    #Rounding down
+        #print("bit length partial eval:", val.bit_length())
+        par_sk = group256.init(ZR,val)
+        evaluations.append(par_sk)
+    return evaluations 
+
+
 
 def searchNMmap(n,m):
     #  Searches for a good random instance of input literals (n) to leaves (m) map: N_M_map
@@ -97,7 +152,6 @@ def psiFunction(randomized_input_indices, m):
         dist_matrix_row_node_indices.append(randomized_input_indices[dist_matrix_row_indices[i]])
 
     json.dump(dist_matrix_row_node_indices, open("tmp/row_node_indices.txt",'w')) 
-
     return dist_matrix_row_node_indices
 
 
@@ -118,9 +172,17 @@ def bbssShareGen(M):
     secret = randVecZR(1)
     rhos   = randVecZR(e-1) 
     RHO = secret + rhos 
+    
+    if group == group283 or group == group571:
+        neworder = int(group.order()) // 4 # Cofactor of 4, ZR actual order is /4
+        RHO = [x % neworder for x in RHO]
+    
     RHO = np.array(RHO)
     DPRINT("no. of cols of M: ", len(M[0]), "\nRHO:", RHO)
+    print("Value being shared - RHO[0]:", RHO[0])
+    print("bitlength of secret:", int(RHO[0]).bit_length())
     S = genShareMatrix(M, RHO)
+
     return S
 
 def bbssShareGen4DKG(M):
@@ -128,11 +190,18 @@ def bbssShareGen4DKG(M):
     d = len(M)
     e = len(M[0])
     
-    secret = randVecZR(1)
+    secret = randVecZR(1) 
     rhos   = randVecZR(e-1) 
     RHO = secret + rhos 
+
+    if group == group283 or group == group571:
+        neworder = int(group.order()) // 4 # Cofactor of 4, ZR actual order is /4
+        RHO = [x % neworder for x in RHO]
+
     RHO = np.array(RHO)
     S = genShareMatrix(M, RHO)
+    print("Value being shared - RHO[0]:", RHO[0])
+    print("bitlength of secret:", int(RHO[0]).bit_length())
     return S, RHO
 
 
@@ -151,6 +220,9 @@ def bbssShareGen4PSS(M, share):
 
     rhos   = randVecZR(e-1) 
     RHO = secret + rhos 
+    #if group == group283 or group == group571:
+    #    neworder = int(group.order()) // 4 # Cofactor of 4, ZR actual order is /4
+    #    RHO = [x % neworder for x in RHO]
     RHO = np.array(RHO)
     S = genShareMatrix(M, RHO)
     return S, RHO
@@ -185,10 +257,9 @@ if __name__ == "__main__":
 
     n = args.nodes  #Number of nodes
 
+    t_start = time.time()
 
 
-
-    '''
     #TODO: make file name include threshold t  
     filename = "bbssutil/datasets/n"+str(n)
 
@@ -209,70 +280,82 @@ if __name__ == "__main__":
 
     else:
         rand_ind, m, N_M_map = generateLiterals(n)
-    '''
-    rand_ind, m, N_M_map = generateLiterals(n)
+    #rand_ind, m, N_M_map = generateLiterals(n)
 
+    print("m:", m)
     sharing_start = time.process_time()
 
     M_filename = "./bbssutil/matrices/"+"m"+str(m)+".txt"
     M = np.loadtxt(M_filename, dtype=int)
+    print("Shape of M:", np.shape(M))
+    
+
+    #------------------------------------# 
+
+    print("Starting afresh") 
+
+    # Same size committee 
     
     row_node_indices = psiFunction(rand_ind, m)
-    
     S = bbssShareGen(M)
     assigned_shares, node_share_index = assignShares2Nodes(S,row_node_indices, n)
-
-    sharing_end = time.process_time()
-
-    sharing_time = (sharing_end - sharing_start)*1000
-
-    DPRINT("Assigned shares':", assigned_shares)
-    DPRINT("Node share index:", node_share_index)
-
-    filename = "tmp/timing_n_"+str(n)+"without_filereading"
-    with open (filename,'a') as f:
-        f.write(str(sharing_time)+"\n")
-
-    '''
-    Node_index= {k:[] for k in range(n)}
-    #TODO: Do not search for N_M-map, use from the stored datasets 
-
-    rand_ind, m, N_M_map = generateLiterals(n)
-    print("rand_ind:", rand_ind, "\nm:", m , "\nN_M_map", N_M_map)
-
-    M_filename = "./util/matrices/"+"m"+str(m)+".txt"
-    M = np.loadtxt(M_filename, dtype=int)
-    if debug:
-        print("Matrix M loaded from file:\n", M)
-        print("Dimensions of loaded Matrix M:", M.shape)
-
-    row_node_indices = psiFunction(rand_ind, m)
-    print("row_node_indices:", row_node_indices)
-
-    #S = LISS_share_gen(M)
-
-    S = bbssShareGen(M)
-    print ("S",S)
-
-
-    S_dash, R_dash = bbssShareGen4DKG(M)
-
-    assigned_shares, node_share_index = assignShares2Nodes(S,row_node_indices, n)
-    if debug:
-        print("Assigned shares:", assigned_shares)
-        print("node_share_index:", node_share_index)
-    '''
-
-    ''' 
-    row_indices = []
-    #for i in range(3*n//4):
-    for i in range(n):
-        row_indices = row_indices + node_share_index[i]
-    print("Row indices for reconstruction", row_indices)
-    '''
-    '''
-    mt = np.transpose(M[row_indices])
-    e  = np.zeros((len(mt),), dtype=int)
+    ma_t = np.transpose(M)
+    e  = np.zeros((len(ma_t),), dtype=int)
     e[0] = 1
+    lambda_a = np.array(solve_for_lambda(ma_t, e), dtype=int)
+    lambda1 = lambda_a 
+    secretkey = np.dot(S, lambda_a)
+    print("Reconstructed:", secretkey)
 
-   ''' 
+    #-- PSS --#
+
+    pss_shares = []
+    for share in S:
+        newshares,RHO = bbssShareGen4PSS(M,share)
+        pss_shares.append(newshares)
+    pss_dash  =  np.transpose(pss_shares)
+    dot_prod = np.dot(pss_dash, lambda_a)
+    newsecretkey = np.dot(dot_prod, lambda_a)
+    print("after PSS:", newsecretkey)
+
+    #--------------------------------------------------#
+    n = 3
+
+    #TODO: make file name include threshold t  
+    filename = "bbssutil/datasets/n"+str(n)
+
+    ssdata = None 
+    try:
+        f = open(filename)
+        ssdata = f.readlines()
+        ssdata = json.loads(ssdata[0])
+        DPRINT(ssdata)
+    except Exception as e: print("",e, "\nSo moving on")
+
+    if ssdata:
+        n        = int(ssdata['n'])
+        m        = int(ssdata['m'])
+        rand_ind = ssdata['rand_ind']
+        rand_ind = ssdata['rand_ind']
+        N_M_map  = ssdata['map']
+        lambdas  = ssdata['lambdas']
+
+    else:
+        rand_ind, m, N_M_map = generateLiterals(n)
+    M_filename = "./bbssutil/matrices/"+"m"+str(m)+".txt"
+    M_dash  = np.loadtxt(M_filename, dtype=int)
+
+    ma_t = np.transpose(M_dash)
+    e  = np.zeros((len(ma_t),), dtype=int)
+    e[0] = 1
+    lambda_a = np.array(solve_for_lambda(ma_t, e), dtype=int)
+
+    pss_shares = []
+    for share in S:
+        newshares,RHO = bbssShareGen4PSS(M_dash,share)
+        pss_shares.append(newshares)
+    pss_dash  =  np.transpose(pss_shares)
+    dot_prod = np.dot(pss_dash, lambda1)
+    newsecretkey = np.dot(dot_prod, lambda_a)
+    print("after PSS2:", newsecretkey)
+

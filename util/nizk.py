@@ -5,17 +5,7 @@ sys.path += ['./','../']
 from conf.groupparam         import *
 
 def nizkpok_vec(dlog_commits, pedersen_commits, RHO, RHO_dash):
-
-
     # g^s g^s h^r RHO=s RHO_dash = r
-
-
-    # Importing g and h from common parameters now 
-    #g = group.encode(decoded_g, True)
-    #h = group.encode(decoded_h, True)
-    #g = group.encode(decoded_g)
-    #h = group.encode(decoded_h)
-
     pi_vec = []
     
     neworder = int(group.order()) // 4 # Cofactor of 4, ZR actual order is /4
@@ -37,6 +27,5 @@ def nizkpok_vec(dlog_commits, pedersen_commits, RHO, RHO_dash):
         serialized_proof = [group.serialize(c), group.serialize(u1), group.serialize(u2)]
         #print("\nSender side proof:", [c, u1, u2])
         pi_vec.append(serialized_proof)
-
     return pi_vec
 

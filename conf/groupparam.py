@@ -31,9 +31,13 @@ decoded_h571 = b'\x07g\x93\x0c\xde\xb3\xb8\x1a\xcf\xa8+\n\xf9W&m\xd2q\x97\x17\xd
 #Assign to 'group' the default group of choice 
 
 
+<<<<<<< HEAD
 bits = 283 
 #bits = 192
 #bits = 256
+=======
+bits = 283
+>>>>>>> 4cd233e09c1d83d2e7cde1fa1f9f88104100d60a
 
 if bits == 160:
     group = group160
